@@ -1,3 +1,5 @@
+### TODO -> Redo the image
+
 # Pendulum Simulator
 
 This is supposed to be a program simulating movements of a pendulum.
