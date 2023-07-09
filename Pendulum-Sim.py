@@ -1,4 +1,6 @@
 # Pendulum Simulation
+from time import sleep as wait
+
 from math import radians as rad, sin
 
 '''
@@ -30,8 +32,13 @@ class pendulum:
         self.potentialEnergy = self.mass * earthAcc * self.distanceToFloor
 
     def __str__(self):
-        return f'This is a pendulum. \nIts arm is {self.length}m long. \nIts weights mass is equal to {self.mass}kg. \nIts current distance to the floor is around {round(self.distanceToFloor, 4)}m. \
-\nIts current angle relative to the position of balance is {self.angle} degrees. \nIts current gravitational potential energy is equal to {round(self.potentialEnergy, 4)}N'
+        return f'This is a pendulum. \nIts arm is {self.length}m long. \nIts weights mass is equal to {self.mass}kg. {self.updateDynamic()}'
+
+    def updateDynamic(self):
+        self.distanceToFloor = self.calculateDistanceToFloor()
+        self.potentialEnergy = self.mass * earthAcc * self.distanceToFloor
+        return f'\nIts current distance to the floor is around {round(self.distanceToFloor, 4)}m. \
+\nIts current angle relative to the position of balance is {self.angle} degrees. \nIts current gravitational potential energy is equal to {round(self.potentialEnergy, 4)}J \n'
         
     def calculateDistanceToFloor(self):
         #Angle naming explained on github
@@ -53,5 +60,25 @@ class pendulum:
 
         return distanceToFloor
 
+    def runPendulum(self, angle):
+        self.angle = angle
+        self.updateDynamic()
+        oppositeDirection = -1 * (self.angle/abs(self.angle)) # -1 -> swing left; 1 -> swing right
+        distanceDifferenceAfterSwing = -1 * oppositeDirection * abs(self.angle/10)
+        oppositeStopPoint = oppositeDirection * (abs(self.angle) - distanceDifferenceAfterSwing)
+
+        while oppositeStopPoint != 0:
+            self.angle += oppositeDirection * 1
+            self.updateDynamic()
+            print(self.updateDynamic())
+
+            if self.angle == oppositeStopPoint:
+                oppositeDirection *= -1
+                oppositeStopPoint = oppositeDirection * (abs(self.angle) - distanceDifferenceAfterSwing)
+                print([oppositeDirection, oppositeStopPoint])
+
+            wait(0.2)
+        
+
 object = pendulum(2, 30)
-print(object)
+object.runPendulum(20)
