@@ -1,4 +1,4 @@
-# Pendulum Simulation
+# Pendulum Simulation - hardcoded edition
 import turtle as t
 from time import sleep as wait
 from math import radians as rad, sin, pi as pi
