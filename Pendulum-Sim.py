@@ -1,7 +1,13 @@
 # Pendulum Simulation
+import turtle as t
 from time import sleep as wait
+from math import radians as rad, sin, pi as pi
 
-from math import radians as rad, sin
+t.bgcolor('grey')
+t.pencolor('white')
+t.speed(1000)
+t.tracer(2)
+t.ht()
 
 '''
 Units used for:
@@ -25,6 +31,9 @@ class pendulum:
         self.mass = mass
         self.forceOfGravity = self.mass * earthAcc
         self.distanceToFloorInPositionOfBalance = 0.3 + (mass/2)/100 #From the center of the weight, in meters
+        self.distanceFromAnchorToFloor = self.length * 100 + self.distanceToFloorInPositionOfBalance * 100
+        self.period = 2 * pi * (self.length / earthAcc)**(1/2)
+        self.swingsPerMinute = round(60 / self.period)
 
         #Dynamic properties
         self.angle = angle
@@ -63,22 +72,55 @@ class pendulum:
     def runPendulum(self, angle):
         self.angle = angle
         self.updateDynamic()
+        
         oppositeDirection = -1 * (self.angle/abs(self.angle)) # -1 -> swing left; 1 -> swing right
-        distanceDifferenceAfterSwing = -1 * oppositeDirection * abs(self.angle/10)
-        oppositeStopPoint = oppositeDirection * (abs(self.angle) - distanceDifferenceAfterSwing)
+        distanceDifferenceAfterSwing = round(-1 * oppositeDirection * abs(self.angle / self.swingsPerMinute))
+        oppositeStopPoint = -self.angle
 
-        while oppositeStopPoint != 0:
-            self.angle += oppositeDirection * 1
-            self.updateDynamic()
-            print(self.updateDynamic())
+        print([oppositeDirection, distanceDifferenceAfterSwing, oppositeStopPoint])
+        
+        swinging = True
 
-            if self.angle == oppositeStopPoint:
+        while swinging:
+            
+            if oppositeDirection == 1 and self.angle >= oppositeStopPoint:
                 oppositeDirection *= -1
                 oppositeStopPoint = oppositeDirection * (abs(self.angle) - distanceDifferenceAfterSwing)
-                print([oppositeDirection, oppositeStopPoint])
+                print([oppositeDirection, distanceDifferenceAfterSwing, oppositeStopPoint])
 
-            wait(0.2)
+            if oppositeDirection == -1 and self.angle <= oppositeStopPoint:
+                oppositeDirection *= -1
+                oppositeStopPoint = oppositeDirection * (abs(self.angle) - distanceDifferenceAfterSwing)
+                print([oppositeDirection, distanceDifferenceAfterSwing, oppositeStopPoint])
+            
+            self.angle += oppositeDirection
+            print(self.updateDynamic())
+
+            self.drawSelf()
+            wait(0.01)
+
+            if oppositeStopPoint == 0 and self.angle == 0:
+                swinging = False
+
+    def drawSelf(self):
+        t.clear()
+        self.drawFloor()
+        t.pu()
+        t.setpos(0, 0)
+        t.pd()
+        t.setheading(self.angle - 90)
+        t.fd(self.length * 100)
+        t.dot(self.mass, 'white')
+
+    def drawFloor(self):
+        t.pu()
+        t.setpos(0, -1 * self.distanceFromAnchorToFloor)
+        t.pd()
+        t.setheading(0)
+        t.fd(self.length * 100)
+        t.bk(self.length * 100 * 2)
         
 
 object = pendulum(2, 30)
+#object.drawSelf()
 object.runPendulum(20)
