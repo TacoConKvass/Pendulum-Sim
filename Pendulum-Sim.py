@@ -1,3 +1,4 @@
+
 #Pendulum Sim - better edition (I hope)
 
 ### IMPORTANT NOTES ###
@@ -13,7 +14,7 @@ Units used for:
  - angle -> degrees
 '''
 
-from math import cos, sin, pi, floor, radians as rad
+from math import cos, sin, pi, floor, sqrt, radians as rad
 from time import sleep as wait
 import turtle as t
 
@@ -86,6 +87,8 @@ class Pendulum:
         self.distanceToFloorInPositionOfBalance = 0.3 + (mass/2)/100 #From the center of the weight, in meters
         self.distanceFromPivotToFloor = self.length * 100 + self.distanceToFloorInPositionOfBalance * 100
 
+        self.crossSectionalArea = pi * ((self.mass/2) ** 2)
+
         #Dynamic
         self.angle = angle
         
@@ -97,8 +100,11 @@ class Pendulum:
 
         self.velocityValue = 0 * sin(rad(self.angle))
         self.velocityToDraw = Vector2(self.velocityValue * cos(rad(self.angle)), self.velocityValue * sin(rad(self.angle)), 'blue') * -1 * VECTOR_DRAW_MODIFIER
+
+        self.dragForceValue = .2 * self.velocityValue
+        self.dragForceToDraw = Vector2(self.dragForceValue * cos(rad(self.angle)), self.dragForceValue * sin(rad(self.angle)), 'cyan') * VECTOR_DRAW_MODIFIER
         
-    def draw(self, drawForces=True):
+    def draw(self, drawForces = True, cout = True):
         t.pencolor('white')
         t.pensize(1)
         self.drawFloor()
@@ -122,12 +128,17 @@ class Pendulum:
             if self.velocityValue != 0:
                 self.velocityToDraw.draw()
 
-        #print(f'Gravitation: {self.gravitationForceToDraw},\tValue: {self.gravitationForceValue}')
-        #print(f'Tension: {self.tensionForceToDraw},\tValue: {self.tensionForceValue}')
-        print(f'Acceleration: {self.accelerationToDraw},\tValue: {self.accelerationValue}')
-        print(f'Velocity: {self.velocityToDraw},\tValue: {self.velocityValue}')
-        print(f'Angle: {self.angle}')
-        print()
+            if self.dragForceValue != 0:
+                self.dragForceToDraw.draw()
+
+        if cout:
+            #print(f'Gravitation: {self.gravitationForceToDraw},\tValue: {self.gravitationForceValue}')
+            #print(f'Tension: {self.tensionForceToDraw},\tValue: {self.tensionForceValue}')
+            print(f'Acceleration: {self.accelerationToDraw},\tValue: {self.accelerationValue}')
+            print(f'Velocity: {self.velocityToDraw},\tValue: {self.velocityValue}')
+            print(f'Drag: {self.dragForceToDraw},\tValue: {self.dragForceValue}')
+            print(f'Angle: {self.angle}')
+            print()
 
     def drawFloor(self):
         t.pu()
@@ -146,21 +157,13 @@ class Pendulum:
         self.accelerationValue = self.gravitationForceValue * sin(rad(self.angle))
         self.accelerationToDraw = Vector2(self.accelerationValue * cos(rad(self.angle)), self.accelerationValue * sin(rad(self.angle)), 'yellow') * -1 * VECTOR_DRAW_MODIFIER
 
-        if self.accelerationValue > 0:
-            if self.velocityValue < 0:
-                self.velocityValue = (self.velocityValue + self.accelerationValue * (floor(AIR_DENSITY / DRAG_COEFFICIENT)) * 0.7)
-            else:
-                self.velocityValue = (self.velocityValue + self.accelerationValue)
-
-        else:
-            if self.velocityValue > 0:
-                self.velocityValue = (self.velocityValue + self.accelerationValue * (floor(AIR_DENSITY / DRAG_COEFFICIENT)) * 0.7)
-            else:
-                self.velocityValue = (self.velocityValue + self.accelerationValue)
-
+        self.velocityValue = (self.velocityValue + self.accelerationValue - self.dragForceValue)
         self.velocityToDraw = Vector2(self.velocityValue * cos(rad(self.angle)), self.velocityValue * sin(rad(self.angle)), 'blue') * -1 * VECTOR_DRAW_MODIFIER
 
-    def updateFrame(self):
+        self.dragForceValue = .5 * AIR_DENSITY * DRAG_COEFFICIENT * ((self.velocityValue/100) ** 2) if self.velocityValue > 0 else .5 * AIR_DENSITY * DRAG_COEFFICIENT * -1 * ((self.velocityValue/100) ** 2)
+        self.dragForceToDraw = Vector2(self.dragForceValue * cos(rad(self.angle)), self.dragForceValue * sin(rad(self.angle)), 'cyan') * VECTOR_DRAW_MODIFIER
+
+    def updateFrame(self, drawForces = True, cout = True):
         swinging = True
         
         while swinging:
@@ -168,15 +171,15 @@ class Pendulum:
             t.clear()
             self.angle += self.velocityToDraw.x / 100
             self.updateDynamic()
-            self.draw(False)
-            wait(0.01)
+            self.draw(drawForces, cout)
+            wait(0.05)
 
             if abs(self.velocityValue) < 0.1 and abs(self.accelerationValue) < 0.8:
                 swinging = False
 
         t.clear()
-        self.draw(False)
+        self.draw(drawForces)
 
-object1 = Pendulum(2, 30, 40)
-object1.draw()
-object1.updateFrame()
+object = Pendulum(2, 30, -40)
+object.draw()
+object.updateFrame(cout = False)
