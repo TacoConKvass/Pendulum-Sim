@@ -14,6 +14,8 @@ double GRAVITY_CONST = 9.801;
 
 double weightCenter[2] = { .0 , PIVOT_POS[1] - LINE_LENGTH };
 double weightMass = 1.;
+double side;
+
 double gravity_val = GRAVITY_CONST * weightMass / 1000;
 double tension_val;
 double acceleration_val;
@@ -24,30 +26,31 @@ double tension[2];
 double acceleration[2];
 double velocity[2];
 
-double rad(double degree)
-{
-    double pi = 3.14159265359;
-    return (degree * (pi / 180));
-}
-
 void updatePendulum()
 {
-    double theta = acos((PIVOT_POS[1] - weightCenter[1]) / .75);
+    if (weightCenter[0] > 0)
+    {
+        side = -1.;
+    }
+    else
+    {
+        side = 1.;
+    }
 
-    tension_val = gravity_val * cos(theta);
-    tension[0] = (tension_val * cos(rad(90) + theta));
-    tension[1] = (tension_val * sin(rad(90) + theta));
+    tension_val = gravity_val;
+    tension[0] = -(weightCenter[0]) * (tension_val / LINE_LENGTH);
+    tension[1] = (PIVOT_POS[1] - weightCenter[1]) * (tension_val / LINE_LENGTH);
 
-    acceleration_val = gravity_val * sin(theta);
-    acceleration[0] = -(acceleration_val * cos(theta));
-    acceleration[1] = -(acceleration_val * sin(theta));
-    
+    acceleration_val = side * sqrt( pow( tension[0], 2 ) + pow( (tension[1] + gravity[1]), 2) );
+    acceleration[0] = (PIVOT_POS[1] - weightCenter[1]) * (acceleration_val / LINE_LENGTH);
+    acceleration[1] = weightCenter[0] * (acceleration_val / LINE_LENGTH);
+
     velocity_val += acceleration_val;
-    velocity[0] = -(velocity_val * cos(theta));
-    velocity[1] = -(velocity_val * sin(theta));
+    velocity[0] = (PIVOT_POS[1] - weightCenter[1]) * (velocity_val / LINE_LENGTH);
+    velocity[1] = weightCenter[0] * (velocity_val / LINE_LENGTH);
 
-    weightCenter[0] += velocity[0] / 10.;
-    weightCenter[1] += velocity[1] / 10.;
+    weightCenter[0] += velocity[0];
+    weightCenter[1] += velocity[1];
 }
 
 void DrawCircle(double cx, double cy, double r, int num_segments)
@@ -56,7 +59,7 @@ void DrawCircle(double cx, double cy, double r, int num_segments)
     glColor3d(1., 1., 1.);
     for (int ii = 0; ii < num_segments; ii++)
     {
-        double theta = 2.0 * 3.1415926 * double(ii) / double(num_segments);//get the current angle
+        double theta = 2.0f * 3.1415926f * double(ii) / double(num_segments);//get the current angle
 
         double x = r * cos(theta);//calculate the x component
         double y = r * sin(theta);//calculate the y component
@@ -70,24 +73,25 @@ void display() {
     // Set every pixel in the frame buffer to the current clear color.
     glClear(GL_COLOR_BUFFER_BIT);
 
-    //if (updateTimer == 0)
-    //{
+    if (updateTimer == 0)
+    {
         updatePendulum();
-    //    updateTimer = 60;
-    //}
-    //updateTimer--;
+        updateTimer = 60;
+    }
+    updateTimer--;
 
     glBegin(GL_LINES);
     glColor3d(1., 1., 1.);
     glVertex2d(weightCenter[0], weightCenter[1]);
     glVertex2d(PIVOT_POS[0], PIVOT_POS[1]);
-    glColor3d(.0, .0, 1.);
+
+    glColor3d(1., .0, .0);
     glVertex2d(weightCenter[0], weightCenter[1]);
-    glVertex2d(weightCenter[0] + (tension[0] * 10.), weightCenter[1] + (tension[1] * 10.));
-    glColor3d(1., 1., .0);
+    glVertex2d(weightCenter[0] + acceleration[0] * 10., weightCenter[1] + acceleration[1] * 10.);
+
+    glColor3d(.0, 1., .0);
     glVertex2d(weightCenter[0], weightCenter[1]);
-    glVertex2d(weightCenter[0] + (acceleration[0] * 10.), weightCenter[1] + (acceleration[1] * 10.));
-    glColor3d(1., 1., .0);
+    glVertex2d(weightCenter[0] + velocity[0] * 10., weightCenter[1] + velocity[1] * 10.);
     glEnd();
 
     DrawCircle(weightCenter[0], weightCenter[1], .1, 50);
@@ -109,7 +113,7 @@ void keyboard(unsigned char key, int x, int y)
 
 int main(int argc, char** argv)
 {
-    weightCenter[0] = -.74;
+    weightCenter[0] = .74;
     weightCenter[1] = .378;
 
     // Use a single buffered window in RGB mode (as opposed to a double-buffered
@@ -124,7 +128,7 @@ int main(int argc, char** argv)
     // Tell GLUT that whenever the main window needs to be repainted that it
     // should call the function display().
     glutDisplayFunc(display);
-    //glutIdleFunc(display);
+    glutIdleFunc(display);
     glutKeyboardFunc(keyboard);
 
     // Tell GLUT to start reading and processing events.  This function
