@@ -59,7 +59,7 @@ void DrawCircle(double cx, double cy, double r, int num_segments)
     glColor3d(1., 1., 1.);
     for (int ii = 0; ii < num_segments; ii++)
     {
-        double theta = 2.0f * 3.1415926f * double(ii) / double(num_segments);//get the current angle
+        double theta = 2.0 * 3.1415926 * double(ii) / double(num_segments);//get the current angle
 
         double x = r * cos(theta);//calculate the x component
         double y = r * sin(theta);//calculate the y component
