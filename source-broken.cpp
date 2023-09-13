@@ -1,4 +1,6 @@
-//Dalej nie działa
+// ZWALONY JEST KĄT POD KTÓRYM PRĘDKOŚĆ I PRZYSPIESZENIE SĄ USTAWIONE
+// DALEJ NIE DZIAŁA!!!!!!
+// NOSZ KURNA MAĆ!!!!!!!
 #ifdef __APPLE_CC__
 #include <GLUT/glut.h>
 #else
@@ -9,13 +11,13 @@
 #include <stdlib.h>
 
 int updateTimer = 60;
+int cyclesLeft = 72;
 double LINE_LENGTH = .75;
 double PIVOT_POS[2] = { .0, .5 };
 double GRAVITY_CONST = 9.801;
 
-double weightCenter[2] = { .0 , PIVOT_POS[1] - LINE_LENGTH };
+double weightCenter[2];
 double weightMass = 1.;
-double side;
 
 double gravity_val = GRAVITY_CONST * weightMass / 1000;
 double tension_val;
@@ -29,29 +31,20 @@ double velocity[2];
 
 void updatePendulum()
 {
-    if (weightCenter[0] > 0)
-    {
-        side = -1.;
-    }
-    else
-    {
-        side = 1.;
-    }
-
     tension_val = gravity_val;
     tension[0] = -(weightCenter[0]) * (tension_val / LINE_LENGTH);
     tension[1] = (PIVOT_POS[1] - weightCenter[1]) * (tension_val / LINE_LENGTH);
 
-    acceleration_val = side * sqrt( pow( tension[0], 2 ) + pow( (tension[1] + gravity[1]), 2) );
-    acceleration[0] = (PIVOT_POS[1] - weightCenter[1]) * (acceleration_val / LINE_LENGTH);
-    acceleration[1] = weightCenter[0] * (acceleration_val / LINE_LENGTH);
+    acceleration_val = -gravity_val * (weightCenter[0] / LINE_LENGTH );
+    acceleration[0] = ((PIVOT_POS[1] - weightCenter[1]) / LINE_LENGTH) * acceleration_val;
+    acceleration[1] = (weightCenter[0] / LINE_LENGTH) * acceleration_val;
 
     velocity_val += acceleration_val;
-    velocity[0] = (PIVOT_POS[1] - weightCenter[1]) * (velocity_val / LINE_LENGTH);
-    velocity[1] = weightCenter[0] * (velocity_val / LINE_LENGTH);
+    velocity[0] = ((PIVOT_POS[1] - weightCenter[1]) / LINE_LENGTH) * velocity_val;
+    velocity[1] = (weightCenter[0] / LINE_LENGTH) * velocity_val;
 
-    weightCenter[0] += velocity[0];
-    weightCenter[1] += velocity[1];
+    weightCenter[0] += velocity[0] / 20.;
+    weightCenter[1] += velocity[1] / 20.;
 }
 
 void DrawCircle(double cx, double cy, double r, int num_segments)
@@ -74,10 +67,11 @@ void display() {
     // Set every pixel in the frame buffer to the current clear color.
     glClear(GL_COLOR_BUFFER_BIT);
 
-    if (updateTimer == 0)
+    if (updateTimer == 0 && cyclesLeft != 0)
     {
         updatePendulum();
         updateTimer = 60;
+        cyclesLeft--;
     }
     updateTimer--;
 
@@ -114,8 +108,8 @@ void keyboard(unsigned char key, int x, int y)
 
 int main(int argc, char** argv)
 {
-    weightCenter[0] = .74;
-    weightCenter[1] = .378;
+    weightCenter[0] = .75;
+    weightCenter[1] = .5;
 
     // Use a single buffered window in RGB mode (as opposed to a double-buffered
     // window or color-index mode).
