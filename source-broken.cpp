@@ -1,3 +1,4 @@
+//Dalej nie działa
 #ifdef __APPLE_CC__
 #include <GLUT/glut.h>
 #else
