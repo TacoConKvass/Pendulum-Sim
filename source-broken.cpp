@@ -1,6 +1,8 @@
-// ZWALONY JEST KĄT POD KTÓRYM PRĘDKOŚĆ I PRZYSPIESZENIE SĄ USTAWIONE
-// DALEJ NIE DZIAŁA!!!!!!
-// NOSZ KURNA MAĆ!!!!!!!
+// Problem jest z dokładnością
+// byłoby lepiej jakbym miał podany kąt ale trudno
+// Lepiej nie będzie
+// Co 10 wachnięć wydłuża się linka o 0.01
+
 #ifdef __APPLE_CC__
 #include <GLUT/glut.h>
 #else
@@ -9,9 +11,13 @@
 
 #include <math.h>
 #include <stdlib.h>
+#include <cstring>
+#include <string>
 
-int updateTimer = 60;
-int cyclesLeft = 72;
+double cosT;
+double sinT;
+
+int updateTimer = 1;
 double LINE_LENGTH = .75;
 double PIVOT_POS[2] = { .0, .5 };
 double GRAVITY_CONST = 9.801;
@@ -29,22 +35,36 @@ double tension[2];
 double acceleration[2];
 double velocity[2];
 
+void text_out(int x, int y, float r, float g, float b, char* string)
+{
+    glColor3f(r, g, b);
+    glRasterPos2f(x, y);
+    int len, i;
+    len = (int)strlen(string);
+    for (i = 0; i < len; i++) {
+        glutBitmapCharacter(GLUT_BITMAP_8_BY_13, string[i]);
+    }
+}
+
 void updatePendulum()
 {
+    cosT = floor(weightCenter[0] / LINE_LENGTH * 100) / 100;
+    sinT = floor((PIVOT_POS[1] - weightCenter[1]) / LINE_LENGTH * 100) / 100;
+
     tension_val = gravity_val;
     tension[0] = -(weightCenter[0]) * (tension_val / LINE_LENGTH);
     tension[1] = (PIVOT_POS[1] - weightCenter[1]) * (tension_val / LINE_LENGTH);
 
     acceleration_val = -gravity_val * (weightCenter[0] / LINE_LENGTH );
-    acceleration[0] = ((PIVOT_POS[1] - weightCenter[1]) / LINE_LENGTH) * acceleration_val;
-    acceleration[1] = (weightCenter[0] / LINE_LENGTH) * acceleration_val;
+    acceleration[0] = sinT * acceleration_val;
+    acceleration[1] = cosT * acceleration_val;
 
     velocity_val += acceleration_val;
-    velocity[0] = ((PIVOT_POS[1] - weightCenter[1]) / LINE_LENGTH) * velocity_val;
-    velocity[1] = (weightCenter[0] / LINE_LENGTH) * velocity_val;
+    velocity[0] = sinT * velocity_val / 10000;
+    velocity[1] = cosT * velocity_val / 10000;
 
-    weightCenter[0] += velocity[0] / 20.;
-    weightCenter[1] += velocity[1] / 20.;
+    weightCenter[0] += velocity[0];
+    weightCenter[1] += velocity[1];
 }
 
 void DrawCircle(double cx, double cy, double r, int num_segments)
@@ -67,11 +87,10 @@ void display() {
     // Set every pixel in the frame buffer to the current clear color.
     glClear(GL_COLOR_BUFFER_BIT);
 
-    if (updateTimer == 0 && cyclesLeft != 0)
+    if (updateTimer == 0 && weightCenter[1] > -.26)
     {
         updatePendulum();
-        updateTimer = 60;
-        cyclesLeft--;
+        updateTimer = 1;
     }
     updateTimer--;
 
@@ -82,14 +101,38 @@ void display() {
 
     glColor3d(1., .0, .0);
     glVertex2d(weightCenter[0], weightCenter[1]);
+    glVertex2d(weightCenter[0] + gravity[0] * 10., weightCenter[1] + gravity[1] * 10.);
+
+    glColor3d(1., 1., .0);
+    glVertex2d(weightCenter[0], weightCenter[1]);
     glVertex2d(weightCenter[0] + acceleration[0] * 10., weightCenter[1] + acceleration[1] * 10.);
 
     glColor3d(.0, 1., .0);
     glVertex2d(weightCenter[0], weightCenter[1]);
+    glVertex2d(weightCenter[0] + tension[0] * 10., weightCenter[1] + tension[1] * 10.);
+
+    glColor3d(.0, .0, 1.);
+    glVertex2d(weightCenter[0], weightCenter[1]);
     glVertex2d(weightCenter[0] + velocity[0] * 10., weightCenter[1] + velocity[1] * 10.);
+    
     glEnd();
 
-    DrawCircle(weightCenter[0], weightCenter[1], .1, 50);
+    DrawCircle(weightCenter[0], weightCenter[1], .1, 100);
+    
+    std::string text = "Cos: ";
+    text += std::to_string(cosT);
+    text += "       Sin: ";
+    text += std::to_string(sinT);
+    text += "       X: ";
+    text += std::to_string(weightCenter[0]);
+    text += "       Y: ";
+    text += std::to_string(weightCenter[1]);
+
+    int text_len = text.length();
+    char* char_array = new char[text_len + 1];
+    strcpy(char_array, text.c_str());
+
+    text_out(-1, -1, 1., 1., 1., char_array);
 
     // Flush drawing command buffer to make drawing happen as soon as possible.
     glFlush();
@@ -108,8 +151,8 @@ void keyboard(unsigned char key, int x, int y)
 
 int main(int argc, char** argv)
 {
-    weightCenter[0] = .75;
-    weightCenter[1] = .5;
+    weightCenter[0] = .74;
+    weightCenter[1] = .378;
 
     // Use a single buffered window in RGB mode (as opposed to a double-buffered
     // window or color-index mode).
