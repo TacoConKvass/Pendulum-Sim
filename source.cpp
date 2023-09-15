@@ -60,8 +60,8 @@ void updatePendulum()
     acceleration[1] = cosT * acceleration_val;
 
     velocity_val += acceleration_val;
-    velocity[0] = sinT * velocity_val / 10000;
-    velocity[1] = cosT * velocity_val / 10000;
+    velocity[0] = sinT * velocity_val / 2500;
+    velocity[1] = cosT * velocity_val / 2500;
 
     weightCenter[0] += velocity[0];
     weightCenter[1] += velocity[1];
