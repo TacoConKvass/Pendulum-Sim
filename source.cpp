@@ -43,7 +43,7 @@ void text_out(int x, int y, float r, float g, float b, char* string)
 
 void updatePendulum()
 {
-    if (weightCenter[1] <= -.26)
+    if (weightCenter[1] < -.251)
     {
         weightCenter[1] = -.25;
     }
